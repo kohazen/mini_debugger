@@ -9,9 +9,15 @@ int main() {
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
         execl("./target", "target", NULL);
     } else {
-        wait(NULL); // Wait for start
-        printf("Debugger: Process started. Running to completion...\n");
-        ptrace(PTRACE_CONT, child, NULL, NULL);
+        int status;
+        wait(&status);
+        printf("Debugger: Process started. Starting single-step...\n");
+
+        while(WIFSTOPPED(status)) {
+            ptrace(PTRACE_SINGLESTEP, child, NULL, NULL);
+            wait(&status);
+        }
+        printf("Debugger: Target finished.\n");
     }
     return 0;
 }
